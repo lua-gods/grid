@@ -160,7 +160,7 @@ local function setGridUV(offset, layer, i, layer_space)
 
     layer.model:setUVMatrix(matrix)
 
-    layer.model:setPos(0, math.max(-(layer.depth or 0), (#layers - i) * layer_space) * 16, 0)
+    layer.model:setPos(0, math.max(-(layer.depth or 0), (#layers - i + 1) * layer_space) * 16, 0)
 end
 
 -- render grid
