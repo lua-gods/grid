@@ -79,7 +79,7 @@ end
 
 -- modify grid
 function grid_api:canEdit()
-    return grid_api_to_name[self] == grid_modes.current:match("^(.*):")
+    return grid_api_to_name[self] ~= nil and grid_api_to_name[self] == grid_modes.current:match("^(.*):")
 end
 
 ---Sets the Texture of the layer selected.
