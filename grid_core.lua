@@ -1,8 +1,8 @@
 local config = {
     model = models.grid.Skull,
     match_block = "minecraft:iron_block",
-    match_offset = vec(0, 0, 0),
-    grid_render_offset = vec(0, 2, 0),
+    match_offset = vec(0, -2, 0),
+    grid_render_offset = vec(0, 0, 0),
     special_signs_pos = {
         vec(1, 0, 0),
         vec(-1, 0, 0),
@@ -10,10 +10,7 @@ local config = {
         vec(0, 0, -1),
         vec(0, -1, 0),
     },
-    default_texture = textures["grid"],
-
-    grid_head_update_inverval = 100, -- in ticks
-    force_grid_mode = "", -- set to "" for this to not take effect : grid:log
+    default_texture = textures["grid.grid"],
 }
 
 local grid_modes, grid_mode_exist, layers, grid_core_functions = require "grid_api"
@@ -37,14 +34,13 @@ local function reset_grid_layers()
         layers[i].depth = 2
         layers[i].texture_size = 1
         layers[i].model:setPrimaryTexture("Custom", config.default_texture)
-        layers[i].model:setColor(1, 1, 1)
         layers[i].model:setVisible(false)
     end
     layers[1].model:setVisible()
 end
 
 -- find grid
-events.SKULL_RENDER:register(function(delta,block,item)
+function events.skull_render(delta, block)
     local isGrid = false
 
     if block and block.id == "minecraft:player_head" and block.properties and block.properties.rotation then
@@ -73,7 +69,7 @@ events.SKULL_RENDER:register(function(delta,block,item)
             grid_pos = pos + vec(grid_start, 0, grid_start) + config.grid_render_offset
             grid_size = grid_end - grid_start + 1
 
-            --grid_head_update_time = 100
+            grid_head_update_time = 100
 
             -- set model
             isGrid = true
@@ -88,8 +84,8 @@ events.SKULL_RENDER:register(function(delta,block,item)
                 if bl.id:match("sign") then
                     local data = bl:getEntityData()
                     if data then
-                        if data.Text1:match("grid_mode") then
-                            local x, y, z = tonumber(data.Text2:match("[%d-.]+")) or 0, tonumber(data.Text3:match("[%d-.]+")) or 0, tonumber(data.Text4:match("[%d-.]+")) or 0
+                        if data.Text1:match("sign_mode") then
+                            local x, y, z = tonumber(data.Text2:match("[%d-.]+")), tonumber(data.Text3:match("[%d-.]+")), tonumber(data.Text4:match("[%d-.]+"))
                             if x and y and z then
                                 if data.Text2:match("~") then x = x + grid_pos.x end
                                 if data.Text3:match("~") then y = y + grid_pos.y end
@@ -104,43 +100,34 @@ events.SKULL_RENDER:register(function(delta,block,item)
     end
 
     config.model:setVisible(isGrid)
-end)
+end
 
 -- update grid
-events.WORLD_TICK:register(function()
-
-    if grid_head_update_time ~= 0 then
-        grid_head_update_time = config.grid_head_update_inverval
+function events.tick()
+    if grid_head_update_time == 0 then
         return
     end
     grid_head_update_time = grid_head_update_time - 1
 
     -- get grid mode
-    if config.force_grid_mode == "" then
-        local bl = world.getBlockState(grid_mode_sign_pos)
-        if bl.id:match("sign") then
-            local data = bl:getEntityData()
-            if data then
-                grid_modes.current = (tostring(data.Text1):match('{"text":"(.*)"}') or "")..
-                                     (tostring(data.Text2):match('{"text":"(.*)"}') or "")..
-                                     (tostring(data.Text3):match('{"text":"(.*)"}') or "")..
-                                     (tostring(data.Text4):match('{"text":"(.*)"}') or "")
-            end
-        end
-    
-        -- update grid when grid mode changed
-        if grid_modes.current ~= grid_modes.last then
-            grid_modes.last = grid_modes.current
-            reset_grid_layers()
-        end
-    else
-        if grid_modes.current ~= config.force_grid_mode then -- grid mode override
-            grid_modes.last = grid_modes.current
-            grid_modes.current = config.force_grid_mode
-            reset_grid_layers()
+    local bl = world.getBlockState(grid_mode_sign_pos)
+    if bl.id:match("sign") then
+        local data = bl:getEntityData()
+        if data then
+            grid_modes.current = (tostring(data.Text1):match('{"text":"(.*)"}') or "")..
+                                 (tostring(data.Text2):match('{"text":"(.*)"}') or "")..
+                                 (tostring(data.Text3):match('{"text":"(.*)"}') or "")..
+                                 (tostring(data.Text4):match('{"text":"(.*)"}') or "")
         end
     end
-end)
+
+    -- update grid when grid mode changed
+    if grid_modes.current ~= grid_modes.last then
+        grid_modes.last = grid_modes.current
+
+        reset_grid_layers()
+    end
+end
 
 -- set uv
 local function setGridUV(offset, layer, i, layer_space)
@@ -160,11 +147,11 @@ local function setGridUV(offset, layer, i, layer_space)
 
     layer.model:setUVMatrix(matrix)
 
-    layer.model:setPos(0, math.max(-(layer.depth or 0), (#layers - i + 1) * layer_space) * 16, 0)
+    layer.model:setPos(0, math.max(-(layer.depth or 0), (#layers - i) * layer_space) * 16, 0)
 end
 
 -- render grid
-events.WORLD_RENDER:register(function(delta)
+function events.world_render(delta)
     if grid_head_update_time == 0 then
         return
     end
@@ -184,7 +171,7 @@ events.WORLD_RENDER:register(function(delta)
     for i = 1, #layers do
         setGridUV(offset, layers[i], i, layer_space)
     end
-end)
+end
 
 -- grid core functions for grid api
 function grid_core_functions.pos()

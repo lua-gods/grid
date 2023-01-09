@@ -3,7 +3,7 @@ local grid_api = {}
 
 local grid_api_metatable = {
     __index = grid_api,
-    __newindex = function() end,
+    __newindex = function() return end,
     __metatable = false,
 }
 
@@ -22,7 +22,7 @@ local grid_mode_exist = {}
 
 -- create grid
 local function create_grid_api(name)
-    local tbl = {}
+    local tbl = grid_api
     
     grid_api_to_name[tbl] = tostring(name):gsub(":", "")
     
@@ -34,21 +34,6 @@ avatar:store("grid_api", create_grid_api)
 -- grid api functions --
 
 -- basic info
-do
-    local list
-    
-    function grid_api:getApi()
-        if not list then
-            list = ""
-            for i in pairs(grid_api) do
-                list = list..i..", "
-            end
-            list = list:sub(1, -3)
-        end
-        return list
-    end
-end
-
 function grid_api:getName()
     return grid_api_to_name[self]
 end
@@ -79,73 +64,58 @@ end
 
 -- modify grid
 function grid_api:canEdit()
-    return grid_api_to_name[self] ~= nil and grid_api_to_name[self] == grid_modes.current:match("^(.*):")
+    return grid_api_to_name[self] == grid_modes.current:match("^(.*):")
 end
 
----Sets the Texture of the layer selected.
----@param texture Texture
----@param layer integer
-function grid_api:setTexture(texture, layer)
+function grid_api:setTexture(texture, layer_to_edit)
     if not self:canEdit() then
         error("Cannot edit texture, you are not creator of this mode", 2)
     end
 
-    local selected_layer = layers[layer or 1]
-    if selected_layer then
-        selected_layer.model:setPrimaryTexture("Custom", texture)
+    local layer = layers[layer_to_edit or 1]
+    if layer then
+        layer.model:setPrimaryTexture("Custom", texture)
     end
 end
 
----Sets the depth of the selected layer, if not given, default is 1.
----@param depth number
----@param layer integer
-function grid_api:setDepth(depth, layer)
+function grid_api:setDepth(depth, layer_to_edit)
     if not self:canEdit() then
-        error("Cannot edit depth, you are not creator of this mode", 2)
+        error("Cannot edit texture, you are not creator of this mode", 2)
     end
 
-    local selected_layer = layers[layer or 1]
-    if selected_layer then
-        selected_layer.depth = tonumber(depth) or 1
+    local layer = layers[layer_to_edit or 1]
+    if layer then
+        layer.depth = tonumber(depth) or 1
     end
 end
 
----Sets the Texture Dimensions.  
----GNs note: no clue what this is for
----@param texture_size integer
----@param layer integer
-function grid_api:setTextureSize(texture_size, layer)
+function grid_api:setTextureSize(texture_size, layer_to_edit)
     if not self:canEdit() then
-        error("Cannot edit texture size, you are not creator of this mode", 2)
+        error("Cannot edit texture, you are not creator of this mode", 2)
     end
 
-    local selected_layer = layers[layer or 1]
-    if selected_layer then
-        selected_layer.texture_size = tonumber(texture_size) or 1
+    local layer = layers[layer_to_edit or 1]
+    if layer then
+        layer.texture_size = tonumber(texture_size) or 1
     end
 end
 
----Sets the color of the layer, the same effect as modelPart:setColor().
----@param color Vector3
----@param layer integer
-function grid_api:setColor(color, layer)
+function grid_api:setColor(color, layer_to_edit)
     if not self:canEdit() then
-        error("Cannot edit color, you are not creator of this mode", 2)
+        error("Cannot edit texture, you are not creator of this mode", 2)
     end
 
-    local selected_layer = layers[layer or 1]
-    if selected_layer then
+    local layer = layers[layer_to_edit or 1]
+    if layer then
         if type(color) == "Vector3" then
-            selected_layer.model:setColor(color)
+            layer.model:setColor(color)
         end
     end
 end
 
----Sets the amount of layers the grid can use
----@param count integer
 function grid_api:setLayerCount(count)
     if not self:canEdit() then
-        error("Cannot edit layer count, you are not creator of this mode", 2)
+        error("Cannot edit texture, you are not creator of this mode", 2)
     end
 
     count = tonumber(count) or 1

@@ -1,11 +1,13 @@
 require "grid_core"
 
-local grid = world.avatarVars()["e4b91448-3b58-4c1f-8339-d40f75ecacc4"]
+local grid = world.avatarVars()["93ab815f-92ab-4ea0-a768-c576896c52a8"]
 if grid then
-    grid = grid.grid_api("GN") -- ask for grid api, you can replace uuid with your name
+    grid = grid.grid_api("Auria")
+    -- grid = grid.grid_api(avatar:getUUID()) -- ask for grid api, you can replace uuid with your name
 else
     return -- no grid found
 end
+
 
 -- print(grid:getName())
 grid:newMode("nya")
@@ -39,8 +41,8 @@ local function grid_init()
     grid:setColor(vec(0.15, 0.15, 0.15), 2)
 end
 
-events.TICK:register(function()
-    local can_edit = grid:canEdit() and grid:getMode() == "GN:nya"
+function events.tick()
+    local can_edit = grid:canEdit() and grid:getMode() == "Auria:nya"
     if can_edit then
         if not my_mode then
             my_mode = true
@@ -59,10 +61,10 @@ events.TICK:register(function()
     else
         my_mode = false
     end
-end)
+end
 
-events.RENDER:register(function(delta)
+function events.render(delta)
     if grid:canEdit() then
         grid:setDepth(math.cos(world.getTime(delta) * 0.1))
     end
-end)
+end
