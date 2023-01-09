@@ -13,7 +13,7 @@ local config = {
     default_texture = textures["grid"],
 
     grid_head_update_inverval = 100, -- in ticks
-    force_grid_mode = "grid:log", -- set to "" for this to not take effect
+    force_grid_mode = "", -- set to "" for this to not take effect : grid:log
 }
 
 local grid_modes, grid_mode_exist, layers, grid_core_functions = require "grid_api"
