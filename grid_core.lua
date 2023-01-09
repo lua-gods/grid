@@ -34,6 +34,7 @@ local function reset_grid_layers()
         layers[i].depth = 2
         layers[i].texture_size = 1
         layers[i].model:setPrimaryTexture("Custom", config.default_texture)
+        layers[i].model:setColor(1, 1, 1)
         layers[i].model:setVisible(false)
     end
     layers[1].model:setVisible()
@@ -84,8 +85,8 @@ function events.skull_render(delta, block)
                 if bl.id:match("sign") then
                     local data = bl:getEntityData()
                     if data then
-                        if data.Text1:match("sign_mode") then
-                            local x, y, z = tonumber(data.Text2:match("[%d-.]+")), tonumber(data.Text3:match("[%d-.]+")), tonumber(data.Text4:match("[%d-.]+"))
+                        if data.Text1:match("grid_mode") then
+                            local x, y, z = tonumber(data.Text2:match("[%d-.]+")) or 0, tonumber(data.Text3:match("[%d-.]+")) or 0, tonumber(data.Text4:match("[%d-.]+")) or 0
                             if x and y and z then
                                 if data.Text2:match("~") then x = x + grid_pos.x end
                                 if data.Text3:match("~") then y = y + grid_pos.y end
@@ -103,7 +104,7 @@ function events.skull_render(delta, block)
 end
 
 -- update grid
-function events.tick()
+function events.world_tick()
     if grid_head_update_time == 0 then
         return
     end
@@ -119,6 +120,7 @@ function events.tick()
                                  (tostring(data.Text3):match('{"text":"(.*)"}') or "")..
                                  (tostring(data.Text4):match('{"text":"(.*)"}') or "")
         end
+
     end
 
     -- update grid when grid mode changed
@@ -147,7 +149,7 @@ local function setGridUV(offset, layer, i, layer_space)
 
     layer.model:setUVMatrix(matrix)
 
-    layer.model:setPos(0, math.max(-(layer.depth or 0), (#layers - i) * layer_space) * 16, 0)
+    layer.model:setPos(0, math.max(-(layer.depth or 0), (#layers - i + 1) * layer_space) * 16, 0)
 end
 
 -- render grid

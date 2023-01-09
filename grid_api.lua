@@ -22,7 +22,7 @@ local grid_mode_exist = {}
 
 -- create grid
 local function create_grid_api(name)
-    local tbl = grid_api
+    local tbl = {}
     
     grid_api_to_name[tbl] = tostring(name):gsub(":", "")
     
@@ -34,6 +34,21 @@ avatar:store("grid_api", create_grid_api)
 -- grid api functions --
 
 -- basic info
+do
+    local list
+    
+    function grid_api:getApi()
+        if not list then
+            list = ""
+            for i in pairs(grid_api) do
+                list = list..i..", "
+            end
+            list = list:sub(1, -3)
+        end
+        return list
+    end
+end
+
 function grid_api:getName()
     return grid_api_to_name[self]
 end
@@ -64,7 +79,7 @@ end
 
 -- modify grid
 function grid_api:canEdit()
-    return grid_api_to_name[self] == grid_modes.current:match("^(.*):")
+    return grid_api_to_name[self] ~= nil and grid_api_to_name[self] == grid_modes.current:match("^(.*):")
 end
 
 function grid_api:setTexture(texture, layer_to_edit)
@@ -80,7 +95,7 @@ end
 
 function grid_api:setDepth(depth, layer_to_edit)
     if not self:canEdit() then
-        error("Cannot edit texture, you are not creator of this mode", 2)
+        error("Cannot edit depth, you are not creator of this mode", 2)
     end
 
     local layer = layers[layer_to_edit or 1]
@@ -91,7 +106,7 @@ end
 
 function grid_api:setTextureSize(texture_size, layer_to_edit)
     if not self:canEdit() then
-        error("Cannot edit texture, you are not creator of this mode", 2)
+        error("Cannot edit texture size, you are not creator of this mode", 2)
     end
 
     local layer = layers[layer_to_edit or 1]
@@ -102,7 +117,7 @@ end
 
 function grid_api:setColor(color, layer_to_edit)
     if not self:canEdit() then
-        error("Cannot edit texture, you are not creator of this mode", 2)
+        error("Cannot edit color, you are not creator of this mode", 2)
     end
 
     local layer = layers[layer_to_edit or 1]
@@ -115,7 +130,7 @@ end
 
 function grid_api:setLayerCount(count)
     if not self:canEdit() then
-        error("Cannot edit texture, you are not creator of this mode", 2)
+        error("Cannot edit layer count, you are not creator of this mode", 2)
     end
 
     count = tonumber(count) or 1
