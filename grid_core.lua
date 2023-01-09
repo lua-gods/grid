@@ -1,8 +1,8 @@
 local config = {
     model = models.grid.Skull,
     match_block = "minecraft:iron_block",
-    match_offset = vec(0, -2, 0),
-    grid_render_offset = vec(0, 0, 0),
+    match_offset = vec(0, 0, 0),
+    grid_render_offset = vec(0, 2, 0),
     special_signs_pos = {
         vec(1, 0, 0),
         vec(-1, 0, 0),
