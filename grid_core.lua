@@ -241,3 +241,7 @@ end
 function grid_api_and_core_functions.current()
     return grid_current_mode
 end
+
+function grid_api_and_core_functions.reload_grid()
+    grid_last_mode = false
+end

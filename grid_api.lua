@@ -51,6 +51,8 @@ end
 -- create grid
 local function grid_init(func, error_func)
     if type(func) == "function" then
+        local current_grid_mode = grid_api_and_core_functions.current()
+
 		local tbl = {newMode = newMode, name = "unknown"}
 		modes_to_add = {}
 		
@@ -66,6 +68,10 @@ local function grid_init(func, error_func)
 			end
              
 			grid_modes[mode_name] = {safe_api, v[2], v[3], v[4], error_func}
+
+            if mode_name == current_grid_mode then
+                grid_api_and_core_functions.reload_grid()
+            end
 		end
 
 		mode_to_add = nil
