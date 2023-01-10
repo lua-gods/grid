@@ -56,7 +56,7 @@ local function call_func(mode, i, value)
         else
             works, err = pcall(func, mode[1])
         end
-        if not works then
+        if not works and not (err:match("Image is not allocated%.")) then
             err = "grid_mode_error\n("..grid_current_mode.."):\n"..err
             pcall(mode[5], err)
             grid_mode_state = 2
