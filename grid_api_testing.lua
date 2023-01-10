@@ -4,7 +4,7 @@ local grid_start
 local grid_number
 events.WORLD_TICK:register(function()
     local grid = world.avatarVars()["e4b91448-3b58-4c1f-8339-d40f75ecacc4"]
-    grid = world.avatarVars()["93ab815f-92ab-4ea0-a768-c576896c52a8"] --H
+    -- grid = world.avatarVars()["93ab815f-92ab-4ea0-a768-c576896c52a8"] --H
     -- print(grid)
     if grid and grid.grid_api and grid_number ~= grid.grid_number then
 		grid_number = grid.grid_number
