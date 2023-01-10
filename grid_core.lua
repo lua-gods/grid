@@ -13,23 +13,28 @@ local config = {
     default_texture = textures["grid.grid"],
 }
 
-local grid_modes, grid_mode_exist, layers, grid_core_functions = require "grid_api"
+local grid_modes, grid_modes_sorted, layers, grid_api_and_core_functions = require "grid_api"
 
 config.model:setLight(15, 15)
 
 -- grid basic info
 local grid_head_update_time = 0
 local grid_pos = vec(0, 0, 0)
-local grid_size = 0
+local grid_size = 1
 
 local grid_mode_sign_pos = vec(0, 0, 0)
+
+-- grid mode
+local grid_current_mode = nil
+local grid_last_mode = false
+local grid_mode_state = 0 -- 0 = finding, 1 = found, 2 = error
 
 -- grid layers
 for i, v in pairs(config.model.grid:getChildren()) do
     layers[i] = {model = v}
 end
 
-local function reset_grid_layers()
+local function reset_grid()
     for i = 1, #layers do
         layers[i].depth = 2
         layers[i].texture_size = 1
@@ -38,6 +43,26 @@ local function reset_grid_layers()
         layers[i].model:setVisible(false)
     end
     layers[1].model:setVisible()
+end
+
+-- call function
+local function call_func(mode, i, value)
+    local func = mode[i]
+    if func then
+        grid_api_and_core_functions.can_edit(true)
+        local works, err
+        if value then
+            works, err = pcall(func, value, mode[1])
+        else
+            works, err = pcall(func, mode[1])
+        end
+        if not works then
+            err = "grid_mode_error\n("..grid_current_mode.."):\n"..err
+            pcall(mode[5], err)
+            grid_mode_state = 2
+        end
+        grid_api_and_core_functions.can_edit(false)
+    end
 end
 
 -- find grid
@@ -68,9 +93,13 @@ function events.skull_render(delta, block)
         if grid_start <= -1 and grid_end >= 1 then
             -- grid found
             grid_pos = pos + vec(grid_start, 0, grid_start) + config.grid_render_offset
-            grid_size = grid_end - grid_start + 1
+            local new_grid_size = grid_end - grid_start + 1
+            if grid_size ~= new_grid_size then
+                grid_size = new_grid_size
+                grid_last_mode = false
+            end
 
-            grid_head_update_time = 100
+            grid_head_update_time = 600
 
             -- set model
             isGrid = true
@@ -111,23 +140,38 @@ function events.world_tick()
     grid_head_update_time = grid_head_update_time - 1
 
     -- get grid mode
+    local override = tostring(client:getViewer():getVariable("force_grid_mode") or "")
     local bl = world.getBlockState(grid_mode_sign_pos)
-    if bl.id:match("sign") then
+    if override ~= "" then
+        grid_current_mode = override
+    elseif bl.id:match("sign") then
         local data = bl:getEntityData()
         if data then
-            grid_modes.current = (tostring(data.Text1):match('{"text":"(.*)"}') or "")..
+            grid_current_mode = (tostring(data.Text1):match('{"text":"(.*)"}') or "")..
                                  (tostring(data.Text2):match('{"text":"(.*)"}') or "")..
                                  (tostring(data.Text3):match('{"text":"(.*)"}') or "")..
                                  (tostring(data.Text4):match('{"text":"(.*)"}') or "")
         end
-
+    else
+        grid_current_mode = nil
     end
 
     -- update grid when grid mode changed
-    if grid_modes.current ~= grid_modes.last then
-        grid_modes.last = grid_modes.current
+    if grid_current_mode ~= grid_last_mode then
+        grid_last_mode = grid_current_mode
+        reset_grid()
+        grid_mode_state = 0
+    end
 
-        reset_grid_layers()
+    --tick function
+    if grid_mode_state == 1 and grid_modes[grid_current_mode] then
+        call_func(grid_modes[grid_current_mode], 3)
+    end
+
+    --init function
+    if grid_mode_state == 0 and grid_modes[grid_current_mode] then
+        grid_mode_state = 1
+        call_func(grid_modes[grid_current_mode], 2)
     end
 end
 
@@ -158,6 +202,12 @@ function events.world_render(delta)
         return
     end
 
+    --render function
+    if grid_mode_state == 1 and grid_modes[grid_current_mode] then
+        call_func(grid_modes[grid_current_mode], 4, delta)
+    end
+
+    --render grid
     local offset = client:getCameraPos() - grid_pos
 
     local distance = math.max(
@@ -176,14 +226,18 @@ function events.world_render(delta)
 end
 
 -- grid core functions for grid api
-function grid_core_functions.pos()
+function grid_api_and_core_functions.pos()
     return grid_pos
 end
 
-function grid_core_functions.size()
+function grid_api_and_core_functions.size()
     return grid_size
 end
 
-function grid_core_functions.exist()
+function grid_api_and_core_functions.exist()
     return grid_head_update_time >= 1
+end
+
+function grid_api_and_core_functions.current()
+    return grid_current_mode
 end

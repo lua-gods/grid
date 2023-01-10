@@ -1,70 +1,64 @@
-require "grid_core"
-
-local grid = world.avatarVars()["93ab815f-92ab-4ea0-a768-c576896c52a8"]
-if grid then
-    grid = grid.grid_api("Auria")
-    -- grid = grid.grid_api(avatar:getUUID()) -- ask for grid api, you can replace uuid with your name
-else
-    return -- no grid found
-end
-
-
--- print(grid:getName())
-grid:newMode("nya")
-
-
-local my_mode = false
-
-local texture
-local size
-
-function uuidToColor(uuid)
-    return vectors.hsvToRGB(tonumber("0x"..uuid:sub(16, 17))/255, tonumber("0x"..uuid:sub(6, 7))/510 + 0.5, 1)
-end
-
-local function grid_init()
-    if not texture then   
-        size = grid:getSize()
-        texture = textures:newTexture("My first grid mode", size, size)
-        texture:fill(0, 0, size, size, vec(0, 0, 0, 0))
+-- this part finds a grid and calls grid_start function when its found
+-- you dont need to think about it
+local grid_start
+local grid_number
+events.WORLD_TICK:register(function()
+    local grid = world.avatarVars()["e4b91448-3b58-4c1f-8339-d40f75ecacc4"]
+    grid = world.avatarVars()["93ab815f-92ab-4ea0-a768-c576896c52a8"] --H
+    -- print(grid)
+    if grid and grid.grid_api and grid_number ~= grid.grid_number then
+		grid_number = grid.grid_number
+    	grid.grid_api(grid_start, function(err) print(err) end)
     end
+end)
 
-    grid:setTexture(texture)
+-- function called when grid found
+-- here you can make your own modes
+function grid_start(grid)
+	-- name you want grid modes to have as prefix
+	grid.name = "my_name"
+	
+	-- here you create a mode
+	-- you call a grid:newMode function
+	-- it takes 4 arguments: name of mode, init function, tick function, render function
+	-- name of mode will have prefix that will be name you used and will have : in middle
+	-- for example if your name is "my_name" and your mode is "my_amazing_mode" it will be turned into: "my_name:my_amazing_mode"
+	-- you can replace functions with nil if you dont use them
+	grid.newMode("my_amazing_mode",
+    function(grid) -- init will be executed once when loading grid mode
+        local size = grid:getSize()
+        local texture = textures:newTexture("simple_texture", size, size)
+        texture:fill(0,0, size, size, vec(0, 0, 0, 0))
 
-    grid:setDepth(1)
+        grid:setLayerCount(2)
+        grid:setColor(vec(0.15, 0.15, 0.18), 2)
+        grid:setTexture(texture, 1)
 
-    grid:setLayerCount(2)
-    
-    grid:setDepth(4, 2)
-    grid:setTextureSize(2, 2)
+        grid:setDepth(0, 1) -- 0 is depth in blocks, 1 is layer
+        grid:setDepth(16, 2) -- 16 is depth in blocks, 2 is layer
+    end,
+    function(grid) -- tick will be executed every tick
+        local texture = textures["simple_texture"]
+        local dimensions = texture:getDimensions()
 
-    grid:setColor(vec(0.15, 0.15, 0.15), 2)
-end
+        local pos = grid:getPos()
 
-function events.tick()
-    local can_edit = grid:canEdit() and grid:getMode() == "Auria:nya"
-    if can_edit then
-        if not my_mode then
-            my_mode = true
-            grid_init()
-        end
-
-        local grid_pos = grid:getPos()
-        for _, v in pairs(world.getPlayers()) do
-            local offset = (v:getPos() - grid_pos).xz
-            if offset.x >= 0 and offset.y >= 0 and offset.x < size and offset.y < size then
-                texture:setPixel(offset.x, offset.y, uuidToColor(v:getUUID()))
+        for i, v in pairs(world.getPlayers()) do
+            local offset = (v:getPos() - pos).xz
+            if offset.x >= 0 and offset.y >= 0 and offset.x < dimensions.x and offset.y < dimensions.y then
+                texture:setPixel(offset.x, offset.y, vec(1, 1, 1, 1))
             end
         end
 
         texture:update()
-    else
-        my_mode = false
-    end
+    end,
+    function(delta, grid) -- render will be executed every render
+        grid:setColor(vectors.hsvToRGB(world.getTime(delta) * 0.005, 0.5, 1), 1)
+    end)
 end
 
-function events.render(delta)
-    if grid:canEdit() then
-        grid:setDepth(math.cos(world.getTime(delta) * 0.1))
-    end
-end
+-- you can also override grid mode like this (only you will see it):
+-- avatar:store("force_grid_mode", "my_name:my_amazing_mode")
+
+-- oh and also in init, tick or render you can get all apis using:
+-- grid:getApi()
