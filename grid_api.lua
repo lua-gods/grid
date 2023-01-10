@@ -115,6 +115,10 @@ function grid_api:getSize()
     return grid_api_and_core_functions.size()
 end
 
+function grid_api:getMaxLayers()
+    return #layers
+end
+
 ---Sets the Texture of the layer selected.
 ---@param texture Texture
 ---@param layer integer
