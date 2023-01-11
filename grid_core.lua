@@ -117,9 +117,9 @@ function events.skull_render(delta, block)
                         if data.Text1:match("grid_mode") then
                             local x, y, z = tonumber(data.Text2:match("[%d-.]+")) or 0, tonumber(data.Text3:match("[%d-.]+")) or 0, tonumber(data.Text4:match("[%d-.]+")) or 0
                             if x and y and z then
-                                if data.Text2:match("~") then x = x + grid_pos.x end
-                                if data.Text3:match("~") then y = y + grid_pos.y end
-                                if data.Text4:match("~") then z = z + grid_pos.z end
+                                if data.Text2:match("~") then x = x + pos.x end
+                                if data.Text3:match("~") then y = y + pos.y end
+                                if data.Text4:match("~") then z = z + pos.z end
                                 grid_mode_sign_pos = vec(x, y, z)
                             end
                         end
