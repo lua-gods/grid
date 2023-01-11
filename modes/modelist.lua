@@ -14,6 +14,8 @@ end)
 
 local queue_draw = {}
 local texture
+local fore
+local shadow
 -- function called when grid found
 -- here you can make your own modes
 function grid_start(grid)
@@ -30,13 +32,23 @@ function grid_start(grid)
     function(grid) -- init will be executed once when loading grid mode
         local size = grid:getSize()
         texture = textures:newTexture("modelistlist", size*20, size*20)
+        fore = textures:newTexture("modelistlistfore", size*20, size*20)
+        shadow = textures:newTexture("modelistshadow", size*20, size*20)
         texture:fill(0,0, size*20, size*20, vec(0, 0, 0, 0))
+        shadow:fill(0,0, size*20, size*20, vec(0, 0, 0, 0))
+        fore:fill(0,0, size*20, size*20, vec(0, 0, 0, 0))
 
-        grid:setLayerCount(2)
-        grid:setColor(vec(0.1,0.1,0.1), 2)
+        grid:setLayerCount(5)
         grid:setTexture(texture, 1)
-        grid:setDepth(1,2)
-
+        grid:setTexture(fore, 2)
+        grid:setDepth(0.02,2)
+        grid:setTexture(fore, 3)
+        grid:setDepth(0.04,3)
+        grid:setTexture(shadow, 4)
+        grid:setDepth(0.5,4)
+        grid:setColor(vec(0.3,0.3,0.3), 5)
+        grid:setDepth(0.5,5)
+        
         grid:setDepth(0, 1) -- 0 is depth in blocks, 1 is layer
         local dimensions = texture:getDimensions()
         
@@ -58,20 +70,33 @@ function grid_start(grid)
             offset.x = 0
             offset.y = offset.y + 8
         end
-        print("List of Grid Modes:")
-        print(">---------------")
+        print("GN & Auria's Grid 2.0")
+        print("List of Currently Available Grid Modes:")
+        print(">-------------------------------")
         local _,list = require "grid_api"
         for key, value in pairs(list) do
             print("| "..value)
         end
+        print(">-------------------------------")
+        print("wiki on how to make one comming soon?")
+        print("")
+        print("note that this does not dynamically")
+        print("tell the current grid modes at")
+        print("runtime, reload is required")
+        print("to update the list.")
 
     end,function ()
-        for i = 1, 10, 1 do
-            if queue_draw[1] then
-                local pen = queue_draw[1]
+        for i = 1, 20, 1 do
+            if #queue_draw > 0 then
+                local chosen = math.random(1,math.min(#queue_draw,50))
+                local pen = queue_draw[chosen]
                 texture:setPixel(pen.x,pen.y,vec(1,1,1))
-                table.remove(queue_draw,1)
+                shadow:setPixel(pen.x,pen.y,vec(0,0,0,0.5))
+                fore:setPixel(pen.x,pen.y,vec(0.5,0.5,0.5,1))
+                table.remove(queue_draw,chosen)
                 texture:update()
+                shadow:update()
+                fore:update()
             end
         end
     end)
