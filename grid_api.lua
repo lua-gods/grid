@@ -14,7 +14,7 @@ local grid_api_and_core_functions = {}
 
 -- grid modes
 local grid_modes = {}
-local grid_modes_sorted = {}
+local grid_modes_sorted = {""}
 
 local modes_to_add = nil
 local function newMode(str, init, tick, render)
