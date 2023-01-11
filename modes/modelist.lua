@@ -29,12 +29,13 @@ function grid_start(grid)
 	grid.newMode("modelist",
     function(grid) -- init will be executed once when loading grid mode
         local size = grid:getSize()
-        texture = textures:newTexture("list", size*20, size*20)
-        texture:fill(0,0, size*20, size*20, vec(0, 0, 0, 1))
+        texture = textures:newTexture("modelistlist", size*20, size*20)
+        texture:fill(0,0, size*20, size*20, vec(0, 0, 0, 0))
 
-        grid:setLayerCount(1)
-        grid:setColor(vec(0.15, 0.15, 0.18), 2)
+        grid:setLayerCount(2)
+        grid:setColor(vec(0.1,0.1,0.1), 2)
         grid:setTexture(texture, 1)
+        grid:setDepth(1,2)
 
         grid:setDepth(0, 1) -- 0 is depth in blocks, 1 is layer
         local dimensions = texture:getDimensions()

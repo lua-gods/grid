@@ -1,7 +1,7 @@
 local t2t = {}
 local config = {
    mapping = "`1234567890-=~!@#$%^&*()_+qwertyuiop[]QWERTYUIOP{}asdfghjkl;'ASDFGHJKL:\"zxcvbnm,./ZXCVBNM<>?\\|",
-   path = ".src.fontmap"
+   path = "grid.fontmap"
 }
 local fontmap = textures[config.path]
 local characters = {}
