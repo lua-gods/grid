@@ -56,7 +56,6 @@ function grid_start(grid)
         grid:setColor(vectors.hsvToRGB(world.getTime(delta) * 0.005, 0.5, 1), 1)
     end)
 end
-
 -- you can also override grid mode like this (only you will see it):
 -- avatar:store("force_grid_mode", "my_name:my_amazing_mode")
 

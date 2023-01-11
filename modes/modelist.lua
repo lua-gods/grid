@@ -12,11 +12,13 @@ events.WORLD_TICK:register(function()
     end
 end)
 
+local queue_draw = {}
+local texture
 -- function called when grid found
 -- here you can make your own modes
 function grid_start(grid)
 	-- name you want grid modes to have as prefix
-	grid.name = "my_name"
+	grid.name = "grid"
 	
 	-- here you create a mode
 	-- you call a grid:newMode function
@@ -24,39 +26,55 @@ function grid_start(grid)
 	-- name of mode will have prefix that will be name you used and will have : in middle
 	-- for example if your name is "my_name" and your mode is "my_amazing_mode" it will be turned into: "my_name:my_amazing_mode"
 	-- you can replace functions with nil if you dont use them
-	grid.newMode("my_amazing_mode",
+	grid.newMode("modelist",
     function(grid) -- init will be executed once when loading grid mode
         local size = grid:getSize()
-        local texture = textures:newTexture("simple_texture", size, size)
-        texture:fill(0,0, size, size, vec(0, 0, 0, 0))
+        texture = textures:newTexture("list", size*20, size*20)
+        texture:fill(0,0, size*20, size*20, vec(0, 0, 0, 1))
 
-        grid:setLayerCount(2)
+        grid:setLayerCount(1)
         grid:setColor(vec(0.15, 0.15, 0.18), 2)
         grid:setTexture(texture, 1)
 
         grid:setDepth(0, 1) -- 0 is depth in blocks, 1 is layer
-        grid:setDepth(16, 2) -- 16 is depth in blocks, 2 is layer
-    end,
-    function(grid) -- tick will be executed every tick
-        local texture = textures["simple_texture"]
         local dimensions = texture:getDimensions()
+        
+        --warp text
 
-        local pos = grid:getPos()
-
-        for i, v in pairs(world.getPlayers()) do
-            local offset = (v:getPos() - pos).xz
-            if offset.x >= 0 and offset.y >= 0 and offset.x < dimensions.x and offset.y < dimensions.y then
-                texture:setPixel(offset.x, offset.y, vec(1, 1, 1, 1))
+        local offset = vec(0,0)
+        local function print(text)
+            local instructions = grid:textToPixels(text)
+            for key, letter in pairs(instructions) do
+                if offset.x+letter.width >= dimensions.x then
+                    offset.x = 0
+                    offset.y = offset.y + 8
+                end
+                for _, pen in pairs(letter.data) do
+                    table.insert(queue_draw,vec(pen.x+offset.x,pen.y+offset.y))
+                end
+                offset.x = offset.x + letter.width
             end
+            offset.x = 0
+            offset.y = offset.y + 8
+        end
+        print("List of Grid Modes:")
+        print(">---------------")
+        local _,list = require "grid_api"
+        for key, value in pairs(list) do
+            print("| "..value)
         end
 
-        texture:update()
-    end,
-    function(delta, grid) -- render will be executed every render
-        grid:setColor(vectors.hsvToRGB(world.getTime(delta) * 0.005, 0.5, 1), 1)
+    end,function ()
+        for i = 1, 10, 1 do
+            if queue_draw[1] then
+                local pen = queue_draw[1]
+                texture:setPixel(pen.x,pen.y,vec(1,1,1))
+                table.remove(queue_draw,1)
+                texture:update()
+            end
+        end
     end)
 end
-
 -- you can also override grid mode like this (only you will see it):
 -- avatar:store("force_grid_mode", "my_name:my_amazing_mode")
 

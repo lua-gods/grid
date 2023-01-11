@@ -1,5 +1,6 @@
 -- grid api --
 local grid_api = {}
+local text_to_texture = require("text2texture")
 
 local grid_api_metatable = {
     __index = grid_api,
@@ -184,6 +185,10 @@ function grid_api:setLayerCount(count)
             layers[i].model:setVisible(false)
         end
     end
+end
+
+function grid_api:textToPixels(text)
+    return text_to_texture:text2pixels(text)
 end
 
 -- return variables --
