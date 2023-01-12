@@ -181,9 +181,11 @@ end)
 
 -- set uv
 local function setGridUV(offset, layer, i, layer_space)
+    local y = (#layers - i + 1) * layer_space
+
     local matrix = matrices.mat3()
 
-    local size = (1 / offset.y) * math.max(layer.depth or 0, 0) + 1
+    local size = (1 / offset.y) * math.max(layer.depth or 0, -y) + 1
 
     local translate = offset.xz / -grid_size
 
@@ -197,7 +199,7 @@ local function setGridUV(offset, layer, i, layer_space)
 
     layer.model:setUVMatrix(matrix)
 
-    layer.model:setPos(0, math.max(-(layer.depth or 0), (#layers - i + 1) * layer_space) * 16, 0)
+    layer.model:setPos(0, math.max(-(layer.depth or 0), y) * 16, 0)
 end
 
 -- render grid
