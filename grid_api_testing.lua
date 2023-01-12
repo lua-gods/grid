@@ -5,7 +5,6 @@ events.WORLD_TICK:register(function()
     for key, grid in pairs(world.avatarVars()) do
         if grid and grid.grid_api and grid_stateID ~= grid.grid_number then
             grid_stateID = grid.grid_number grid.grid_api(grid_start) end
-        events.WORLD_TICK:remove("grid finder") 
     end-- GN's UUID
 end,"grid finder")
 
