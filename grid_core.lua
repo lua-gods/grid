@@ -25,7 +25,7 @@ local grid_size = 1
 local grid_mode_sign_pos = vec(0, 0, 0)
 
 -- grid mode
-local grid_current_mode = nil
+local grid_current_mode_id = nil
 local grid_last_mode = false
 local grid_mode_state = 0 -- 0 = finding, 1 = found, 2 = error
 
@@ -46,19 +46,16 @@ local function reset_grid()
 end
 
 -- call function
-local function call_func(mode, i, value)
-    local func = mode[i]
-    if func then
+local function call_func(event,...)
+    local current_mode = grid_modes[grid_current_mode_id]
+    if current_mode and event then
         grid_api_and_core_functions.can_edit(true)
-        local works, err
-        if value then
-            works, err = pcall(func, value, mode[1])
-        else
-            works, err = pcall(func, mode[1])
-        end
-        if not works and not (err:match("Image is not allocated%.")) then
-            err = "grid_mode_error\n("..grid_current_mode.."):\n"..err
-            pcall(mode[5], err)
+        local working, err = pcall(event.invoke,event,...,current_mode.api)
+        if not working and not (err:match("Image is not allocated%.")) then
+            err = "grid_mode_error\n("..grid_current_mode_id.."):\n"..err
+            if err then
+                print(err)
+            end
             grid_mode_state = 2
         end
         grid_api_and_core_functions.can_edit(false)
@@ -143,37 +140,44 @@ function events.world_tick()
     local override = tostring(client:getViewer():getVariable("force_grid_mode") or "")
     local bl = world.getBlockState(grid_mode_sign_pos)
     if override ~= "" then
-        grid_current_mode = override
+        grid_current_mode_id = override
     elseif bl.id:match("sign") then
         local data = bl:getEntityData()
         if data then
-            grid_current_mode = (tostring(data.Text1):match('{"text":"(.*)"}') or "")..
+            grid_current_mode_id = (tostring(data.Text1):match('{"text":"(.*)"}') or "")..
                                  (tostring(data.Text2):match('{"text":"(.*)"}') or "")..
                                  (tostring(data.Text3):match('{"text":"(.*)"}') or "")..
                                  (tostring(data.Text4):match('{"text":"(.*)"}') or "")
         end
     else
-        grid_current_mode = nil
+        grid_current_mode_id = nil
     end
-
+    local current_mode = grid_modes[grid_current_mode_id]
     -- update grid when grid mode changed
-    if grid_current_mode ~= grid_last_mode then
-        grid_last_mode = grid_current_mode
+    if grid_current_mode_id ~= grid_last_mode then
+        grid_last_mode = grid_current_mode_id
         reset_grid()
         grid_mode_state = 0
     end
 
     --tick function
-    if grid_mode_state == 1 and grid_modes[grid_current_mode] then
-        call_func(grid_modes[grid_current_mode], 3)
+    if grid_mode_state == 1 and current_mode then
+        call_func(current_mode.TICK)
     end
 
     --init function
-    if grid_mode_state == 0 and grid_modes[grid_current_mode] then
+    if grid_mode_state == 0 and current_mode then
         grid_mode_state = 1
-        call_func(grid_modes[grid_current_mode], 2)
+        call_func(current_mode.INIT)
+        
     end
 end
+
+events.WORLD_RENDER:register(function()
+    if grid_modes[grid_current_mode_id] then
+        call_func(grid_modes[grid_current_mode_id].RENDER)
+    end
+end)
 
 -- set uv
 local function setGridUV(offset, layer, i, layer_space)
@@ -203,8 +207,8 @@ function events.world_render(delta)
     end
 
     --render function
-    if grid_mode_state == 1 and grid_modes[grid_current_mode] then
-        call_func(grid_modes[grid_current_mode], 4, delta)
+    if grid_mode_state == 1 and grid_modes[grid_current_mode_id] then
+        call_func(grid_modes[grid_current_mode_id].RENDER, delta)
     end
 
     --render grid
@@ -239,7 +243,7 @@ function grid_api_and_core_functions.exist()
 end
 
 function grid_api_and_core_functions.current()
-    return grid_current_mode
+    return grid_current_mode_id
 end
 
 function grid_api_and_core_functions.reload_grid()

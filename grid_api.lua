@@ -1,6 +1,7 @@
 -- grid api --
 local grid_api = {}
 local text_to_texture = require("text2texture")
+local katt_event_api = require("KattEventsAPI")
 
 local grid_api_metatable = {
     __index = grid_api,
@@ -18,11 +19,21 @@ local grid_modes = {}
 local grid_modes_sorted = {""}
 
 local modes_to_add = nil
-local function newMode(str, init, tick, render)
+local function newMode(name)
 	if modes_to_add then
-		modes_to_add[#modes_to_add+1] = {str, init, tick, render}
+        local package = {
+            name=name,
+            INIT = katt_event_api.newEvent(),
+            TICK = katt_event_api.newEvent(),
+            RENDER = katt_event_api.newEvent(),
+        }
+		modes_to_add[#modes_to_add+1] = package
+        setmetatable(package,grid_api_metatable)
+        return package
 	end
 end
+
+-->====================[  ]====================<--
 
 local function sort_number(str)
     local a = (string.byte(str:sub(1, 1)) or 0) * 255 + (string.byte(str:sub(2, 2)) or 0)
@@ -50,7 +61,7 @@ local function sort_grid_mode(str)
 end
 
 -- create grid
-local function grid_init(func, error_func)
+local function grid_init(func)
     if type(func) == "function" then
         local current_grid_mode = grid_api_and_core_functions.current()
 
@@ -58,17 +69,18 @@ local function grid_init(func, error_func)
 		modes_to_add = {}
 		
     	func(tbl)
-    	
-    	local name = tostring(rawget(tbl, "name")):gsub(":", "")
-    	local safe_api = setmetatable({}, grid_api_metatable)
+    	--local safe_api = setmetatable({}, grid_api_metatable)
     	for _, v in ipairs(modes_to_add) do
-             local mode_name = name..":"..tostring(v[1]):gsub(":", "")
+             local mode_name = tostring(v.name)
              
 			if not grid_modes[mode_name] then
 				sort_grid_mode(mode_name)
 			end
-             
-			grid_modes[mode_name] = {safe_api, v[2], v[3], v[4], error_func}
+            
+			grid_modes[mode_name] = {
+                INIT=v.INIT,
+                TICK=v.TICK,
+                RENDER=v.RENDER}
 
             if mode_name == current_grid_mode then
                 grid_api_and_core_functions.reload_grid()
@@ -78,6 +90,8 @@ local function grid_init(func, error_func)
 		mode_to_add = nil
     end
 end
+
+-->====================[  ]====================<--
 
 avatar:store("grid_api", grid_init)
 
@@ -112,7 +126,7 @@ function grid_api:getPos()
     return grid_api_and_core_functions.pos()
 end
 
-function grid_api:getSize()
+function grid_api:getGridSize()
     return grid_api_and_core_functions.size()
 end
 
@@ -123,7 +137,7 @@ end
 ---Sets the Texture of the layer selected.
 ---@param texture Texture
 ---@param layer integer
-function grid_api:setTexture(texture, layer)
+function grid_api:setLayerTexture(texture, layer)
     if not can_edit then return end
 
     local selected_layer = layers[layer or 1]
@@ -135,7 +149,7 @@ end
 ---Sets the depth of the selected layer, if not given, default is 1.
 ---@param depth number
 ---@param layer integer
-function grid_api:setDepth(depth, layer)
+function grid_api:setLayerDepth(depth, layer)
     if not can_edit then return end
 
     local selected_layer = layers[layer or 1]
@@ -161,7 +175,7 @@ end
 ---Sets the color of the layer, the same effect as modelPart:setColor().
 ---@param color Vector3
 ---@param layer integer
-function grid_api:setColor(color, layer)
+function grid_api:setLayerColor(color, layer)
     if not can_edit then return end
 
     local selected_layer = layers[layer or 1]
