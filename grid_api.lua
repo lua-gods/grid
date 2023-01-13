@@ -36,11 +36,7 @@ end
 -->====================[  ]====================<--
 
 local function sort_number(str)
-    local a = (string.byte(str:sub(1, 1)) or 0) * 255 + (string.byte(str:sub(2, 2)) or 0)
-	if str:match(":") then
-        return a + (string.byte(str:match(":(.)") or "") or 0) / 255 + (string.byte(str:match(":.(.)") or "") or 0) / 65536
-    end
-    return a 
+    return (string.byte(str:sub(1, 1)) or 0) * 65536 + (string.byte(str:sub(2, 2)) or 0) * 256 + (string.byte(str:sub(3, 3)) or 0) + (string.byte(str:sub(4, 4)) or 0) / 256 + (string.byte(str:sub(5, 5)) or 0) / 65536
 end
 
 local function sort_grid_mode(str)
