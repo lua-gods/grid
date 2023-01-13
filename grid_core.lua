@@ -139,12 +139,13 @@ function events.world_tick()
     -- get grid mode
     local override = tostring(client:getViewer():getVariable("force_grid_mode") or "")
     local bl = world.getBlockState(grid_mode_sign_pos)
+    local new_mode_to_set
     if override ~= "" then
-        grid_current_mode_id = override
+        new_mode_to_set = override
     elseif bl.id:match("sign") then
         local data = bl:getEntityData()
         if data then
-            grid_current_mode_id = (tostring(data.Text1):match('{"text":"(.*)"}') or "")..
+            new_mode_to_set = (tostring(data.Text1):match('{"text":"(.*)"}') or "")..
                                  (tostring(data.Text2):match('{"text":"(.*)"}') or "")..
                                  (tostring(data.Text3):match('{"text":"(.*)"}') or "")..
                                  (tostring(data.Text4):match('{"text":"(.*)"}') or "")
@@ -152,16 +153,21 @@ function events.world_tick()
     else
         grid_current_mode_id = nil
     end
-    local current_mode = grid_modes[grid_current_mode_id]
-    if not current_mode and config.fallback_mode ~= "" then -- grid mode not found
+
+    if grid_modes[new_mode_to_set] or config.fallback_mode == "" then
+        grid_current_mode_id = new_mode_to_set
+    else
         grid_current_mode_id = config.fallback_mode
-    end
+    end 
+
     -- update grid when grid mode changed
     if grid_current_mode_id ~= grid_last_mode then
         grid_last_mode = grid_current_mode_id
         reset_grid()
         grid_mode_state = 0
     end
+
+    local current_mode = grid_modes[grid_current_mode_id]
 
     --tick function
     if grid_mode_state == 1 and current_mode then
@@ -172,7 +178,6 @@ function events.world_tick()
     if grid_mode_state == 0 and current_mode then
         grid_mode_state = 1
         call_func(current_mode.INIT)
-        
     end
 end
 
