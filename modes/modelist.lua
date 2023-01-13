@@ -44,7 +44,6 @@ function grid_start(grid)
         modelist:setLayerDepth(0.5,4)
         modelist:setLayerColor(vec(0.3,0.3,0.3), 5)
         modelist:setLayerDepth(0.5,5)
-        
         local dimensions = texture:getDimensions()
         
         --warp text
@@ -76,7 +75,7 @@ function grid_start(grid)
         print("Progress:")
         print("[  ] PRESETNATION!")
         print("[  ] Dynamic modelist updating")
-        print("[  ] Documentation")
+        print("[X] Documentation")
         print("[X] Figura my beloved")
         print("[X] Events Integration")
     end)
