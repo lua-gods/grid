@@ -11,8 +11,7 @@ events.WORLD_TICK:register(function()
 end,"grid finder")
 
 local queue_draw = {}
-local texture
-local fore
+local written
 local shadow
 local floaty = 0
 -- function called when grid found
@@ -24,34 +23,36 @@ function grid_start(grid)
 	-- name of mode will have prefix that will be name you used and will have : in middle
 	-- for example if your name is "my_name" and your mode is "my_amazing_mode" it will be turned into: "my_name:my_amazing_mode"
 	-- you can replace functions with nil if you dont use them
+    ---@type gridMode
 	local modelist = grid.newMode("grid:modelist")
     modelist.INIT:register(function() -- init will be executed once when loading grid mode
         local size = modelist:getGridSize()
         
-        texture = textures:newTexture("modelistlist", size*20, size*20)
-        fore = textures:newTexture("modelistlistfore", size*20, size*20)
+        local icon = textures["grid.icon"]
+        written = textures:newTexture("modelistlist", size*20, size*20)
         shadow = textures:newTexture("modelistshadow", size*20, size*20)
-        texture:fill(0,0, size*20, size*20, vec(0, 0, 0, 0))
+        written:fill(0,0, size*20, size*20, vec(0, 0, 0, 0))
         shadow:fill(0,0, size*20, size*20, vec(0, 0, 0, 0))
-        fore:fill(0,0, size*20, size*20, vec(0, 0, 0, 0))
 
         modelist:setLayerCount(5)
         modelist:setLayerDepth(floaty, 1)
-        modelist:setLayerTexture(texture, 1)
-        modelist:setLayerTexture(fore, 2)
+        modelist:setLayerTexture(written, 1)
+        modelist:setLayerTexture(written, 2)
+        modelist:setLayerColor(vec(0.6,0.6,0.6),2)
         modelist:setLayerDepth(floaty+0.02,2)
-        modelist:setLayerTexture(fore, 3)
+        modelist:setLayerTexture(written, 3)
+        modelist:setLayerColor(vec(0.6,0.6,0.6),3)
         modelist:setLayerDepth(floaty+0.04,3)
         modelist:setLayerTexture(shadow, 4)
         modelist:setLayerDepth(0.5,4)
         modelist:setLayerColor(vec(0.3,0.3,0.3), 5)
         modelist:setLayerDepth(0.5,5)
-        local dimensions = texture:getDimensions()
+        local dimensions = written:getDimensions()
         
         --warp text
 
-        local offset = vec(0,0)
-        local function print(text)
+        local offset = vec(0,40)
+        local function write(text)
             local instructions = modelist:textToPixels(text)
             for key, letter in pairs(instructions) do
                 if offset.x+letter.width >= dimensions.x then
@@ -66,36 +67,45 @@ function grid_start(grid)
             offset.x = 0
             offset.y = offset.y + 8
         end
-        print("GN & Auria's Grid 2.0")
-        print("List of Currently Available Grid Modes:")
-        print(">-------------------------------")
+        write("By Auria & GN (lua gods organization)")
+        write("List of Currently Available Grid Modes:")
+        write(">-------------------------------")
         local _,list = require "grid_api"
         for key, value in pairs(list) do
-            print("| "..value)
+            write("| "..value)
         end
-        print(">-------------------------------")
-        print("Progress:")
-        print("[  ] PRESETNATION!")
-        print("[  ] Dynamic modelist updating")
-        print("[X] Documentation")
-        print("[X] Figura my beloved")
-        print("[X] Events Integration")
-    end)
 
+        write(">-------------------------------")
+
+
+        write("Progress:")
+        write("[  ] PRESETNATION!")
+        write("[  ] Dynamic modelist updating")
+        write("[X] Documentation")
+        write("[X] Figura my beloved")
+        write("[X] Events Integration")
+
+        
+        local icon_dim = icon:getDimensions()
+        local icon_pos = vec(0,0)
+        local icon_scale = 2
+        written:applyFunc(icon_pos.x,icon_pos.y,icon_dim.x*icon_scale,icon_dim.y*icon_scale,function (clr,x,y)
+            local over = icon:getPixel((x-icon_pos.x)/icon_scale,(y-icon_pos.y)/icon_scale)
+            return math.lerp(clr,over,over.a)
+        end)
+    end)
     modelist.RENDER:register(function (delta)
-        floaty = math.sin(client:getSystemTime()*0.008)*0.1
+        floaty = math.sin(client:getSystemTime()*0.002)*0.1
         modelist:setLayerDepth(floaty, 1)
         modelist:setLayerDepth(floaty+0.02,2)
         modelist:setLayerDepth(floaty+0.04,3)
         local function setPixel(x,y,toggle)
             if toggle then
-                texture:setPixel(x,y,vec(1,1,1))
+                written:setPixel(x,y,vec(1,1,1))
                 shadow:setPixel(x,y,vec(0,0,0,0.5))
-                fore:setPixel(x,y,vec(0.5,0.5,0.5,1))
             else
-                texture:setPixel(x,y,vec(1,1,1,0))
+                written:setPixel(x,y,vec(1,1,1,0))
                 shadow:setPixel(x,y,vec(0,0,0,0))
-                fore:setPixel(x,y,vec(0.5,0.5,0.5,0))
             end
         end
         for i = 1, 20, 1 do
@@ -104,9 +114,8 @@ function grid_start(grid)
                 local pen = queue_draw[chosen]
                 setPixel(pen.x,pen.y,true)
                 table.remove(queue_draw,chosen)
-                texture:update()
+                written:update()
                 shadow:update()
-                fore:update()
             end
         end
     end)
