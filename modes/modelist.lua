@@ -83,7 +83,7 @@ function grid_start(grid)
     end)
 
     modelist.RENDER:register(function (delta)
-        floaty = math.sin(client:getSystemTime()*0.002)*0.1
+        floaty = math.sin(client:getSystemTime()*0.008)*0.1
         modelist:setLayerDepth(floaty, 1)
         modelist:setLayerDepth(floaty+0.02,2)
         modelist:setLayerDepth(floaty+0.04,3)

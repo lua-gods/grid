@@ -11,6 +11,8 @@ local config = {
         vec(0, -1, 0),
     },
     default_texture = textures["grid.grid"],
+
+    fallback_mode = "grid:modelist",
 }
 
 local grid_modes, grid_modes_sorted, layers, grid_api_and_core_functions = require "grid_api"
@@ -151,6 +153,9 @@ function events.world_tick()
         grid_current_mode_id = nil
     end
     local current_mode = grid_modes[grid_current_mode_id]
+    if not current_mode and config.fallback_mode ~= "" then -- grid mode not found
+        grid_current_mode_id = config.fallback_mode
+    end
     -- update grid when grid mode changed
     if grid_current_mode_id ~= grid_last_mode then
         grid_last_mode = grid_current_mode_id

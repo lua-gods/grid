@@ -186,7 +186,6 @@ end
 ---@param count integer
 function grid_api:setLayerCount(count)
     if not can_edit then return end
-
     count = tonumber(count) or 1
     for i = 1, #layers do
         if count >= i then

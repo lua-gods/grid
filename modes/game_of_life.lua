@@ -10,7 +10,8 @@ events.WORLD_TICK:register(function()
 end,"grid finder")
 
 local config = {
-    subdivide = 4,
+    subdivide = 2,
+    depth_subdiv = 32,
     search = {
         vec(-1,-1),
         vec(-1,1),
@@ -28,12 +29,12 @@ local config = {
 
 function grid_start(grid)
     ---@type gridMode
-	local gol = grid.newMode("demo:gol")
+	local gol = grid.newMode("demo:game_of_life")
     local size = gol:getGridSize()*config.subdivide
     local frame = textures:newTexture("golworld",size,size)
     local lastFrame = textures:newTexture("golshadowworld",size,size)
     gol.INIT:register(function ()
-        gol:setLayerCount(10)
+        gol:setLayerCount(config.depth_subdiv)
         
         lastFrame:fill(0,0,size,size,vec(0,0,0,1))
         frame:applyFunc(0,0,size,size,function (clr,x,y)
@@ -44,16 +45,16 @@ function grid_start(grid)
             end
         end)
         
-        for i = 1, 10, 1 do
-            if i == 10 then
+        for i = 1, config.depth_subdiv, 1 do
+            if i == config.depth_subdiv then
                 gol:setLayerColor(vec(0.1,0.1,0.1),i)
             else
                 gol:setLayerTexture(frame,i)
                 if i ~= 1 then
-                    gol:setLayerColor(vec(0.6,0.6,0.6),i)
+                    gol:setLayerColor(math.lerp(vec(0.8,0.8,0.8),vec(0.4,0.4,0.4),i/config.depth_subdiv),i)
                 end
             end
-            gol:setLayerDepth(i*0.03,i)
+            gol:setLayerDepth(i*((1/config.subdivide)/config.depth_subdiv),i)
         end
         frame:update()
     end)
@@ -63,7 +64,7 @@ function grid_start(grid)
         lastFrame:applyFunc(0,0,size,size,function (clr,x,y)
             return frame:getPixel(x,y)
         end)
-        for i = 1, 200, 1 do
+        for i = 1, 100, 1 do
             xpen = xpen + 1
             if xpen >= size then
                 xpen = 0
