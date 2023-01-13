@@ -1,9 +1,10 @@
-
-local grid_start ,grid_stateID
+local grid_start ,grid_stateID = nil, {}
 events.WORLD_TICK:register(function()
     for key, grid in pairs(world.avatarVars()) do
-        if grid and grid.grid_api and grid_stateID ~= grid.grid_number then
-            grid_stateID = grid.grid_number grid.grid_api(grid_start) end
+        if grid and grid.grid_api and grid_stateID[key] ~= grid.grid_number then
+            	grid_stateID[key] = grid.grid_number
+            	grid.grid_api(grid_start)
+            end
     end-- GN's UUID
 end,"grid finder")
 
