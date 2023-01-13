@@ -163,20 +163,19 @@ function events.world_tick()
     -- update grid when grid mode changed
     if grid_current_mode_id ~= grid_last_mode then
         grid_last_mode = grid_current_mode_id
+        grid_mode_state = 0
         reset_grid()
         
     end
-    if grid_mode_state == 2 then
-        return 
-    end
+
     local current_mode = grid_modes[grid_current_mode_id]
 
-    --tick function
+    -- tick function
     if grid_mode_state == 1 and current_mode then
         call_func(current_mode.TICK)
     end
 
-    --init function
+    -- init function
     if grid_mode_state == 0 and current_mode then
         grid_mode_state = 1
         call_func(current_mode.INIT)
@@ -184,7 +183,8 @@ function events.world_tick()
 end
 
 events.WORLD_RENDER:register(function()
-    if grid_modes[grid_current_mode_id] and grid_mode_state ~= 2 then
+    -- render function
+    if grid_modes[grid_current_mode_id] and grid_mode_state == 1 then
         call_func(grid_modes[grid_current_mode_id].RENDER)
     end
 end)
@@ -211,14 +211,9 @@ local function setGridUV(offset, layer, i, layer_space)
 end
 
 -- render grid
-function events.world_render(delta)
-    if grid_head_update_time == 0 or grid_mode_state ~= 1 then
+events.WORLD_RENDER:register(function()
+    if grid_head_update_time == 0 then
         return
-    end
-
-    --render function
-    if grid_mode_state == 1 and grid_modes[grid_current_mode_id] then
-        call_func(grid_modes[grid_current_mode_id].RENDER, delta)
     end
 
     --render grid
@@ -237,7 +232,7 @@ function events.world_render(delta)
     for i = 1, #layers do
         setGridUV(offset, layers[i], i, layer_space)
     end
-end
+end)
 
 -- grid core functions for grid api
 function grid_api_and_core_functions.pos()
