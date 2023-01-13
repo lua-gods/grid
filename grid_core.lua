@@ -51,11 +51,9 @@ local function call_func(event,...)
     if current_mode and event then
         grid_api_and_core_functions.can_edit(true)
         local working, err = pcall(event.invoke,event,...,current_mode.api)
-        if not working and not (err:match("Image is not allocated%.")) then
-            err = "grid_mode_error\n("..grid_current_mode_id.."):\n"..err
-            if err then
-                print(err)
-            end
+        if err then
+            err = '{"color":"red","text":"'..("grid_mode_error: "..grid_current_mode_id.."\n"..err)..'"}'
+            printJson(err)
             grid_mode_state = 2
         end
         grid_api_and_core_functions.can_edit(false)
