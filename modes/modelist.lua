@@ -1,11 +1,13 @@
 -- this part finds a grid and calls grid_start function when its found
 -- you dont need to think about it
-local grid_start ,grid_stateID
+local grid_start ,grid_stateID = nil, {}
 events.WORLD_TICK:register(function()
     for key, grid in pairs(world.avatarVars()) do
-        if grid and grid.grid_api and grid_stateID ~= grid.grid_number then
-            grid_stateID = grid.grid_number grid.grid_api(grid_start) end
-    end-- GN's UUID
+        if grid and grid.grid_api and grid_stateID[key] ~= grid.grid_number then
+            	grid_stateID[key] = grid.grid_number
+            	grid.grid_api(grid_start)
+            end
+    end
 end,"grid finder")
 
 local queue_draw = {}

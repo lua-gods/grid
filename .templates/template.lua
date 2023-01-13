@@ -5,7 +5,7 @@ events.WORLD_TICK:register(function()
             	grid_stateID[key] = grid.grid_number
             	grid.grid_api(grid_start)
             end
-    end-- GN's UUID
+    end
 end,"grid finder")
 
 function grid_start(grid)
