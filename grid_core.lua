@@ -210,7 +210,7 @@ end
 
 -- render grid
 function events.world_render(delta)
-    if grid_head_update_time == 0 then
+    if grid_head_update_time == 0 and grid_mode_state == 1 then
         return
     end
 
