@@ -159,14 +159,16 @@ function events.world_tick()
     else
         grid_current_mode_id = config.fallback_mode
     end 
-
+    
     -- update grid when grid mode changed
     if grid_current_mode_id ~= grid_last_mode then
         grid_last_mode = grid_current_mode_id
         reset_grid()
-        grid_mode_state = 0
+        
     end
-
+    if grid_mode_state == 2 then
+        return 
+    end
     local current_mode = grid_modes[grid_current_mode_id]
 
     --tick function
@@ -182,7 +184,7 @@ function events.world_tick()
 end
 
 events.WORLD_RENDER:register(function()
-    if grid_modes[grid_current_mode_id] then
+    if grid_modes[grid_current_mode_id] and grid_mode_state ~= 2 then
         call_func(grid_modes[grid_current_mode_id].RENDER)
     end
 end)
@@ -210,7 +212,7 @@ end
 
 -- render grid
 function events.world_render(delta)
-    if grid_head_update_time == 0 and grid_mode_state == 1 then
+    if grid_head_update_time == 0 or grid_mode_state ~= 1 then
         return
     end
 
