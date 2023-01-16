@@ -91,7 +91,10 @@ function events.skull_render(delta, block)
         if grid_start < 0 and grid_end > 0 then
             -- grid found
             grid_found = true
-            grid_pos = pos + vec(grid_start, 0, grid_start) + config.grid_render_offset
+            
+            grid_pos = pos + vec(grid_start, 0, grid_start) + config.grid_render_offset 
+            local z_fight_margin = math.max(vectors.toCameraSpace(pos).z,0)*0.001
+            grid_pos.y = grid_pos.y + z_fight_margin
             local new_grid_size = grid_end - grid_start + 1
             if grid_size ~= new_grid_size then
                 grid_size = new_grid_size
@@ -106,7 +109,6 @@ function events.skull_render(delta, block)
             config.model.grid:setPos((grid_pos - pos) * 16)
             config.model.grid:setScale(grid_size, 1, grid_size)
             config.model:setRot(0, block.properties.rotation * 22.5, 0)
-
             --find signs
             for _, v in ipairs(config.special_signs_pos) do
                 local bl = world.getBlockState(pos + v + config.match_offset)
