@@ -16,7 +16,7 @@ local grid_api_and_core_functions = {}
 
 -- grid modes
 local grid_modes = {}
-local grid_modes_sorted = {""}
+local grid_modes_sorted = {}
 
 local modes_to_add = nil
 local function newMode(name)
@@ -40,6 +40,7 @@ local function sort_number(str)
 end
 
 local function sort_grid_mode(str)
+    table.insert(grid_modes_sorted,"")
 	local x = sort_number(str)
     local min, max = 1, math.max(#grid_modes_sorted, 1)
     local limit = 0
@@ -52,8 +53,8 @@ local function sort_grid_mode(str)
             max = half
         end
     end
-
     table.insert(grid_modes_sorted, min, str)
+    table.remove(grid_modes_sorted,#grid_modes_sorted)
 end
 
 -- create grid
