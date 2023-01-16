@@ -81,6 +81,9 @@ function grid_start(grid)
         write("Progress:")
         write("[  ] PRESETNATION!")
         write("[  ] Dynamic modelist updating")
+        write("[  ] Mode List over the boundaries fix")
+        write("[  ] Z fighting when far fix")
+        write("[  ] minesweeper")
         write("[X] Documentation")
         write("[X] Figura my beloved")
         write("[X] Events Integration")
@@ -108,7 +111,7 @@ function grid_start(grid)
                 shadow:setPixel(x,y,vec(0,0,0,0))
             end
         end
-        for i = 1, 20, 1 do
+        for i = 1, 40, 1 do
             if #queue_draw > 0 then
                 local chosen = math.random(1,math.min(#queue_draw,50))
                 local pen = queue_draw[chosen]
