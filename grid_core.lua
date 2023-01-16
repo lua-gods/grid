@@ -63,10 +63,11 @@ local function call_func(event,...)
 end
 
 -- find grid
+local grid_found = false
 function events.skull_render(delta, block)
     local isGrid = false
 
-    if block and block.id == "minecraft:player_head" and block.properties and block.properties.rotation then
+    if not grid_found and block and block.id == "minecraft:player_head" and block.properties and block.properties.rotation then
     local pos = block:getPos()
 
         local grid_start = 0
@@ -87,8 +88,9 @@ function events.skull_render(delta, block)
             end
         end
 
-        if grid_start <= -1 and grid_end >= 1 then
+        if grid_start < 0 and grid_end > 0 then
             -- grid found
+            grid_found = true
             grid_pos = pos + vec(grid_start, 0, grid_start) + config.grid_render_offset
             local new_grid_size = grid_end - grid_start + 1
             if grid_size ~= new_grid_size then
@@ -183,6 +185,7 @@ function events.world_tick()
 end
 
 events.WORLD_RENDER:register(function()
+    grid_found = false -- reset check, triggers first before skull render
     -- render function
     if grid_modes[grid_current_mode_id] and grid_mode_state == 1 then
         call_func(grid_modes[grid_current_mode_id].RENDER)
