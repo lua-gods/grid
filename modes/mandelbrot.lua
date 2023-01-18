@@ -38,7 +38,7 @@ function grid_start(grid)
    local ignore = true
    myMode.TICK:register(function ()
       if enabled then
-         for _ = 1, 500, 1 do
+         for _ = 1, 100, 1 do
             x = x + 1
             if x >= current_res then
                x = 0
