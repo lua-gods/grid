@@ -13,9 +13,11 @@ local config = {
     default_texture = textures["grid.grid"],
 
     fallback_mode = "grid:modelist",
+    margin = 0.001,
 }
 
 local grid_modes, grid_modes_sorted, layers, grid_api_and_core_functions = require "grid_api"
+local grid_mode_metadata = {}
 
 config.model:setLight(15, 15)
 
@@ -93,8 +95,8 @@ function events.skull_render(delta, block)
             grid_found = true
             
             grid_pos = pos + vec(grid_start, 0, grid_start) + config.grid_render_offset 
-            local z_fight_margin = math.max(vectors.toCameraSpace(pos).z,0)*0.001
-            grid_pos.y = grid_pos.y + z_fight_margin
+            config.margin = math.max(vectors.toCameraSpace(pos).z,0.01)
+            grid_pos.y = grid_pos.y 
             local new_grid_size = grid_end - grid_start + 1
             if grid_size ~= new_grid_size then
                 grid_size = new_grid_size
@@ -212,7 +214,7 @@ local function setGridUV(offset, layer, i, layer_space)
 
     layer.model:setUVMatrix(matrix)
 
-    layer.model:setPos(0, math.max(-(layer.depth or 0), 0) * 16 + (#layers - i + 1) * layer_space, 0)
+    layer.model:setPos(0, math.max(-(layer.depth or 0), 0) * 16 + (#layers - i + 1) * layer_space * ((config.margin*0.1)+1), 0)
 end
 
 -- render grid
