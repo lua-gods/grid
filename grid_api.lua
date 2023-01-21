@@ -123,6 +123,15 @@ function grid_api:getPos()
     return grid_api_and_core_functions.pos()
 end
 
+function grid_api:getParameters(raw)
+    local str, list = grid_api_and_core_functions.parameters()
+    if raw then
+        return str
+    else
+        return list
+    end
+end
+
 function grid_api:getGridSize()
     return grid_api_and_core_functions.size()
 end

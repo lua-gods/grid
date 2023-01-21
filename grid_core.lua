@@ -17,7 +17,7 @@ local config = {
 }
 
 local grid_modes, grid_modes_sorted, layers, grid_api_and_core_functions = require "grid_api"
-local grid_mode_metadata = {}
+local mode_parameters, mode_parameters_list = "", {}
 
 config.model:setLight(15, 15)
 
@@ -49,13 +49,20 @@ local function reset_grid()
     layers[1].model:setVisible()
 end
 
+local function read_mode(str)
+    str = tostring(str)
+    local name, parameters = str:match("^(.*);([^;]+)$")
+
+    return name or str, parameters or ""
+end
+
 -- call function
 local function call_func(event,...)
     local current_mode = grid_modes[grid_current_mode_id]
     if current_mode and event then
         grid_api_and_core_functions.can_edit(true)
         local working, err = pcall(event.invoke,event,...,current_mode.api)
-        if err then
+        if not working and err then
             err = '{"color":"red","text":"'..("grid_mode_error: "..grid_current_mode_id.."\n"..err)..'"}'
             printJson(err)
             grid_mode_state = 2
@@ -145,26 +152,34 @@ function events.world_tick()
     -- get grid mode
     local override = tostring(client:getViewer():getVariable("force_grid_mode") or "")
     local bl = world.getBlockState(grid_mode_sign_pos)
-    local new_mode_to_set
+    local new_mode_to_set = ""
+    local parameters_to_set = ""
     if override ~= "" then
-        new_mode_to_set = override
+        new_mode_to_set, parameters_to_set = read_mode(override)
     elseif bl.id:match("sign") then
         local data = bl:getEntityData()
         if data then
-            new_mode_to_set = (tostring(data.Text1):match('{"text":"(.*)"}') or "")..
-                                 (tostring(data.Text2):match('{"text":"(.*)"}') or "")..
-                                 (tostring(data.Text3):match('{"text":"(.*)"}') or "")..
-                                 (tostring(data.Text4):match('{"text":"(.*)"}') or "")
+            new_mode_to_set, parameters_to_set = read_mode(
+                (tostring(data.Text1):match('{"text":"(.*)"}') or "")..
+                (tostring(data.Text2):match('{"text":"(.*)"}') or "")..
+                (tostring(data.Text3):match('{"text":"(.*)"}') or "")..
+                (tostring(data.Text4):match('{"text":"(.*)"}') or "")
+            )
         end
     else
-        grid_current_mode_id = nil
+        new_mode_to_set = nil
     end
 
-    if grid_modes[new_mode_to_set] or config.fallback_mode == "" then
-        grid_current_mode_id = new_mode_to_set
-    else
-        grid_current_mode_id = config.fallback_mode
+    if not grid_modes[new_mode_to_set] and config.fallback_mode ~= "" then
+        new_mode_to_set, parameters_to_set = read_mode(config.fallback_mode)
     end 
+
+    grid_current_mode_id = new_mode_to_set
+    mode_parameters = parameters_to_set
+    mode_parameters_list = {}
+    for v in mode_parameters:gmatch("(.+),* *") do
+        mode_parameters_list[#mode_parameters_list+1] = v
+    end
     
     -- update grid when grid mode changed
     if grid_current_mode_id ~= grid_last_mode then
@@ -260,4 +275,8 @@ end
 
 function grid_api_and_core_functions.reload_grid()
     grid_last_mode = false
+end
+
+function grid_api_and_core_functions.parameters()
+    return mode_parameters, mode_parameters_list
 end
