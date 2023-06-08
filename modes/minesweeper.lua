@@ -290,7 +290,7 @@ function grid_start(grid)
             end
          end
     end)
-    print(myMode:getParameters(true))
+   --  print(myMode:getParameters(true))
     myMode.RENDER:register(function (delta)
         
     end)

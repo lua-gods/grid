@@ -24,14 +24,15 @@ config.model:setLight(15, 15)
 -- grid basic info
 local grid_head_update_time = 0
 local grid_pos = vec(0, 0, 0)
+local grid_skull_pos = vec(0, 0, 0)
 local grid_size = 1
-
 local grid_mode_sign_pos = vec(0, 0, 0)
 
 -- grid mode
 local grid_current_mode_id = nil
 local grid_last_mode = false
 local grid_mode_state = 0 -- 0 = finding, 1 = found, 2 = error
+local need_to_render_grid = false
 
 -- grid layers
 for i, v in pairs(config.model.grid:getChildren()) do
@@ -73,80 +74,94 @@ end
 
 -- find grid
 local grid_found = false
-function events.skull_render(delta, block)
-    local isGrid = false
+local function render_grid(pos)
+    if not need_to_render_grid then
+        return
+    end
+    local block = world.getBlockState(pos)
+    if block.properties and block.properties.rotation then
+        need_to_render_grid = false
+        config.model.grid:setPos((grid_pos - pos) * 16)
+        config.model.grid:setScale(grid_size, 1, grid_size)
+        config.model:setRot(0, block.properties.rotation * 22.5, 0)
+        config.model:setVisible(true)
+    end
+end
 
-    if not grid_found and block and block.id == "minecraft:player_head" and block.properties and block.properties.rotation then
-    local pos = block:getPos()
-
-        local grid_start = 0
-        for _ = 1, 32 do
-            grid_start = grid_start - 1
-            if world.getBlockState(pos + vec(grid_start, 0, grid_start) + config.match_offset).id ~= config.match_block then
-                grid_start = grid_start + 1
-                break
-            end
+local function find_grid(pos)
+    local grid_start = 0 -- get grid pos
+    for _ = 1, 32 do
+        grid_start = grid_start - 1
+        if world.getBlockState(pos + vec(grid_start, 0, grid_start) + config.match_offset).id ~= config.match_block then
+            grid_start = grid_start + 1
+            break
         end
-        
-        local grid_end = 0
-        for _ = 1, 32 do
-            grid_end = grid_end + 1
-            if world.getBlockState(pos + vec(grid_end, 0, grid_end) + config.match_offset).id ~= config.match_block then
-                grid_end = grid_end - 1
-                break
-            end
+    end 
+    local grid_end = 0
+    for _ = 1, 32 do
+        grid_end = grid_end + 1
+        if world.getBlockState(pos + vec(grid_end, 0, grid_end) + config.match_offset).id ~= config.match_block then
+            grid_end = grid_end - 1
+            break
+        end
+    end
+
+    if grid_start < 0 and grid_end > 0 then -- grid found
+        -- grid found
+        grid_found = true
+        config.margin = math.max(vectors.toCameraSpace(pos).z*0.0001,0.001)
+        grid_skull_pos = pos
+        grid_pos = pos + vec(grid_start, config.margin, grid_start) + config.grid_render_offset 
+        grid_pos.y = grid_pos.y 
+        local new_grid_size = grid_end - grid_start + 1
+        if grid_size ~= new_grid_size then
+            grid_size = new_grid_size
+            grid_last_mode = false
         end
 
-        if grid_start < 0 and grid_end > 0 then
-            -- grid found
-            grid_found = true
-            config.margin = math.max(vectors.toCameraSpace(pos).z*0.0001,0.001)
-            grid_pos = pos + vec(grid_start, config.margin, grid_start) + config.grid_render_offset 
-            grid_pos.y = grid_pos.y 
-            local new_grid_size = grid_end - grid_start + 1
-            if grid_size ~= new_grid_size then
-                grid_size = new_grid_size
-                grid_last_mode = false
-            end
+        grid_head_update_time = 10
 
-            grid_head_update_time = 600
-
-            -- set model
-            isGrid = true
-
-            config.model.grid:setPos((grid_pos - pos) * 16)
-            config.model.grid:setScale(grid_size, 1, grid_size)
-            config.model:setRot(0, block.properties.rotation * 22.5, 0)
-            --find signs
-            for _, v in ipairs(config.special_signs_pos) do
-                local bl = world.getBlockState(pos + v + config.match_offset)
-                if bl.id:match("sign") then
-                    local data = bl:getEntityData()
-                    if data then
-                        if data.Text1:match("grid_mode") then
-                            local x, y, z = tonumber(data.Text2:match("[%d-.]+")) or 0, tonumber(data.Text3:match("[%d-.]+")) or 0, tonumber(data.Text4:match("[%d-.]+")) or 0
-                            if x and y and z then
-                                if data.Text2:match("~") then x = x + pos.x end
-                                if data.Text3:match("~") then y = y + pos.y end
-                                if data.Text4:match("~") then z = z + pos.z end
-                                grid_mode_sign_pos = vec(x, y, z)
-                            end
+        --find signs
+        for _, v in ipairs(config.special_signs_pos) do
+            local bl = world.getBlockState(grid_skull_pos + v + config.match_offset)
+            if bl.id:match("sign") then
+                local data = bl:getEntityData()
+                if data then
+                    if data.Text1:match("grid_mode") then
+                        local x, y, z = tonumber(data.Text2:match("[%d-.]+")) or 0, tonumber(data.Text3:match("[%d-.]+")) or 0, tonumber(data.Text4:match("[%d-.]+")) or 0
+                        if x and y and z then
+                            if data.Text2:match("~") then x = x + grid_skull_pos.x end
+                            if data.Text3:match("~") then y = y + grid_skull_pos.y end
+                            if data.Text4:match("~") then z = z + grid_skull_pos.z end
+                            grid_mode_sign_pos = vec(x, y, z)
                         end
                     end
                 end
             end
         end
     end
+end
 
-    config.model:setVisible(isGrid)
+-- find grid
+function events.skull_render(delta, block)
+    config.model:setVisible(false)
+    if block and block.id == "minecraft:player_head" and block.properties and block.properties.rotation then
+        local pos = block:getPos()
+
+        if not grid_found then
+            find_grid(pos)
+        end
+
+        -- set model
+        render_grid(pos)
+    end
 end
 
 -- update grid
 function events.world_tick()
-    if grid_head_update_time == 0 then
+    if grid_head_update_time <= 0 then
         return
     end
-    grid_head_update_time = grid_head_update_time - 1
 
     -- get grid mode
     local override = tostring(client:getViewer():getVariable("force_grid_mode") or "")
@@ -202,11 +217,18 @@ function events.world_tick()
     end
 end
 
-events.WORLD_RENDER:register(function()
+events.WORLD_RENDER:register(function(delta)
+    local bl = world.getBlockState(grid_skull_pos)
+    if not grid_found and bl.id == "minecraft:player_head" and grid_head_update_time >= 1 and bl.properties and bl.properties.rotation then
+        find_grid(grid_skull_pos)
+    end
+    --
     grid_found = false -- reset check, triggers first before skull render
+    need_to_render_grid = true
+    grid_head_update_time = math.max(grid_head_update_time - 1, 0)
     -- render function
     if grid_modes[grid_current_mode_id] and grid_mode_state == 1 then
-        call_func(grid_modes[grid_current_mode_id].RENDER)
+        call_func(grid_modes[grid_current_mode_id].RENDER, delta)
     end
 end)
 
@@ -233,7 +255,7 @@ end
 
 -- render grid
 events.WORLD_RENDER:register(function()
-    if grid_head_update_time == 0 then
+    if grid_head_update_time <= 0 then
         return
     end
 
