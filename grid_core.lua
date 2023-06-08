@@ -100,9 +100,8 @@ function events.skull_render(delta, block)
         if grid_start < 0 and grid_end > 0 then
             -- grid found
             grid_found = true
-            
-            grid_pos = pos + vec(grid_start, 0, grid_start) + config.grid_render_offset 
-            config.margin = math.max(vectors.toCameraSpace(pos).z,0.01)
+            config.margin = math.max(vectors.toCameraSpace(pos).z*0.0001,0.001)
+            grid_pos = pos + vec(grid_start, config.margin, grid_start) + config.grid_render_offset 
             grid_pos.y = grid_pos.y 
             local new_grid_size = grid_end - grid_start + 1
             if grid_size ~= new_grid_size then
@@ -220,7 +219,7 @@ local function setGridUV(offset, layer, i, layer_space)
     local translate = offset.xz / -grid_size
 
     matrix:translate(translate)
-    matrix:scale(size, size)
+    matrix:scale(size, size, 1)
     matrix:translate(-translate)
     
     matrix:translate(-0.5, -0.5)
