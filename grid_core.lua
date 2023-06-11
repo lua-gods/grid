@@ -97,7 +97,6 @@ local function parseSign(block)
         end
     end
 end
-parseSign(world.getBlockState(696989, 64, -696983))
 
 local grid_found = false
 local function render_grid(pos)
