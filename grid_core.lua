@@ -72,24 +72,30 @@ local function call_func(event,...)
     end
 end
 
+local function parseSignJsonString(str)
+    if not str then return '' end
+    local tbl = parseJson(str)
+    return type(tbl) == 'table' and tbl.text or tostring(tbl)
+end
+
 -- find grid
 local function parseSign(block)
     local data = block:getEntityData()
     if data then
         if data.front_text then
             if data.front_text.messages then
-                return tostring(data.front_text.messages[1] or ""),
-                       tostring(data.front_text.messages[2] or ""),
-                       tostring(data.front_text.messages[3] or ""),
-                       tostring(data.front_text.messages[4] or "")
+                return parseSignJsonString(data.front_text.messages[1]),
+                       parseSignJsonString(data.front_text.messages[2]),
+                       parseSignJsonString(data.front_text.messages[3]),
+                       parseSignJsonString(data.front_text.messages[4])
             end
         end
         if data.back_text then
             if data.back_text.messages then
-                return tostring(data.back_text.messages[1] or ""),
-                       tostring(data.back_text.messages[2] or ""),
-                       tostring(data.back_text.messages[3] or ""),
-                       tostring(data.back_text.messages[4] or "")
+                return parseSignJsonString(data.back_text.messages[1]),
+                       parseSignJsonString(data.back_text.messages[2]),
+                       parseSignJsonString(data.back_text.messages[3]),
+                       parseSignJsonString(data.back_text.messages[4])
             end
         end
         if data.Text1 and data.Text2 and data.Text3 and data.Text4 then
@@ -199,10 +205,10 @@ function events.world_tick()
         local t1, t2, t3, t4 = parseSign(bl)
         if t1 then
             new_mode_to_set, parameters_to_set = read_mode(
-                (t1:match('{"text":"(.*)"}') or "")..
-                (t2:match('{"text":"(.*)"}') or "")..
-                (t3:match('{"text":"(.*)"}') or "")..
-                (t4:match('{"text":"(.*)"}') or "")
+                t1..
+                t2..
+                t3..
+                t4
             )
         end
     else
