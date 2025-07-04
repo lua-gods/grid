@@ -199,7 +199,7 @@ function grid_api:setLayerCount(count)
     count = tonumber(count) or 1
     for i = 1, #layers do
         if count >= i then
-            layers[i].model:setVisible()
+            layers[i].model:setVisible(true)
         else
             layers[i].model:setVisible(false)
         end

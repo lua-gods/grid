@@ -47,7 +47,7 @@ local function reset_grid()
         layers[i].model:setColor(1, 1, 1)
         layers[i].model:setVisible(false)
     end
-    layers[1].model:setVisible()
+    layers[1].model:setVisible(true)
 end
 
 local function read_mode(str)
@@ -178,13 +178,15 @@ function events.skull_render(delta, block)
     config.model:setVisible(false)
     if block and block.id == "minecraft:player_head" and block.properties and block.properties.rotation then
         local pos = block:getPos()
-
-        if not grid_found then
-            find_grid(pos)
+        if world.getBlockState(pos + vec(1, 0, 1)).id == 'minecraft:iron_block' then
+            
+            if not grid_found then
+                find_grid(pos)
+            end
+            
+            -- set model
+            render_grid(pos)
         end
-
-        -- set model
-        render_grid(pos)
     end
 end
 
